@@ -6,12 +6,11 @@ import { FaCloudUploadAlt } from "react-icons/fa";
 const GeminiImageText = () => {
   const [prompt, setPrompt] = useState('');
   const [output, setOutput] = useState('');
-  const [imagePreview, setImagePreview] = useState(null); // State to store image preview
+  const [imagePreview, setImagePreview] = useState(null); 
   const fileInputRef = useRef(null);
   
-  const API_KEY = 'AIzaSyCZdmhH4zxw8saKSNt_UooA3RL2yKBwY3o';
+  const API_KEY = 'YOUR_API_KEY';
 
-  // ✅ Handle image upload and preview
   const handleImageChange = (event) => {
     const file = event.target.files[0];
 
@@ -20,7 +19,7 @@ const GeminiImageText = () => {
       reader.readAsDataURL(file);
 
       reader.onload = () => {
-        setImagePreview(reader.result); // Set image preview after uploading
+        setImagePreview(reader.result); 
       };
     }
   };
@@ -37,7 +36,6 @@ const GeminiImageText = () => {
         return;
       }
 
-      // Convert image to base64
       const imageBase64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -45,7 +43,6 @@ const GeminiImageText = () => {
         reader.onerror = reject;
       });
 
-      // Create content for the API
       const contents = [
         {
           role: 'user',
@@ -56,7 +53,6 @@ const GeminiImageText = () => {
         },
       ];
 
-      // Initialize the Gemini AI model
       const genAI = new GoogleGenerativeAI(API_KEY);
       const model = genAI.getGenerativeModel({
         model: 'gemini-1.5-flash',
@@ -68,7 +64,7 @@ const GeminiImageText = () => {
         ],
       });
 
-      // Stream the response
+   
       const result = await model.generateContentStream({ contents });
 
       let buffer = [];
