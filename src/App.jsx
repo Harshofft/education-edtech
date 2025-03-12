@@ -13,8 +13,8 @@ import Sidebar, { SidebarItem } from "./components/UIElments/Sidebar";
 import GeminiImageText from "./components/models/main";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-import Projects from "../pages/sidebar/Projects";
-import HomePage from "../pages/sidebar/HomePage";
+import Projects from "./pages/sidebar/Projects";
+import HomePage from "./pages/sidebar/HomePage";
 
 function App() {
   return (
