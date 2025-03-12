@@ -9,9 +9,8 @@ const GeminiImageText = () => {
   const [imagePreview, setImagePreview] = useState(null); // State to store image preview
   const fileInputRef = useRef(null);
   
-  const API_KEY = 'AIzaSyCZdmhH4zxw8saKSNt_UooA3RL2yKBwY3o';
+  const API_KEY = 'YOUR_API_KEY';
 
-  // ✅ Handle image upload and preview
   const handleImageChange = (event) => {
     const file = event.target.files[0];
 
@@ -84,6 +83,11 @@ const GeminiImageText = () => {
 
   return (
     <div className="max-w-2xl mx-auto p-4">
+      <div className="flex flex-wrap justify-center text-align gap-3 p-4">
+      <h1 className="text-black text-3xl mb-8 font-bold leading-tight capitlize">
+        Image Analysis
+      </h1>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div 
           className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg p-6 h-40 cursor-pointer"
