@@ -8,8 +8,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import Webcam from "react-webcam";
-import MarkdownIt from "markdown-it";
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const CameraComponent = ({ setImage, setImagePreview }) => {
   const webcamRef = useRef(null);
@@ -22,16 +21,6 @@ const CameraComponent = ({ setImage, setImagePreview }) => {
         setImage(imageSrc);
         setImagePreview(imageSrc);
       }
-    } else {
-      console.error("Webcam reference is not available.");
-    }
-  };
-
-  const toggleCamera = () => {
-    setCameraActive((prev) => !prev);
-    if (!cameraActive) {
-      setImage(null);
-      setImagePreview(null);
     }
   };
 
@@ -57,7 +46,7 @@ const CameraComponent = ({ setImage, setImagePreview }) => {
           <FaCamera className="text-xl" />
         </button>
         <button
-          onClick={toggleCamera}
+          onClick={() => setCameraActive(!cameraActive)}
           className="bg-gray-400 text-white p-3 rounded-full hover:bg-gray-500 shadow-md"
         >
           {cameraActive ? <FaVideoSlash className="text-xl" /> : <FaVideo className="text-xl" />}
@@ -72,7 +61,7 @@ const GeminiImageText = () => {
   const [output, setOutput] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [cameraImage, setCameraImage] = useState(null);
-  const [showOutput, setShowOutput] = useState(false); // Controls whether to show the output section
+  const [showOutput, setShowOutput] = useState(false);
   const fileInputRef = useRef(null);
   const API_KEY = "YOUR_API_KEY_HERE";
 
@@ -91,7 +80,7 @@ const GeminiImageText = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setOutput("Generating...");
-    setShowOutput(true); // Show the output section
+    setShowOutput(true);
 
     try {
       let imageDataUrl = cameraImage || imagePreview;
@@ -100,75 +89,51 @@ const GeminiImageText = () => {
         return;
       }
 
-      let fileBlob = await fetch(imageDataUrl).then((res) => res.blob());
-      let base64Image = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(",")[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(fileBlob);
-      });
-
       const genAI = new GoogleGenerativeAI(API_KEY);
-      const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
-        safetySettings: [
-          {
-            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-            threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-          },
-        ],
-      });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const contents = [
         {
           role: "user",
-          parts: [
-            { inline_data: { mime_type: "image/jpeg", data: base64Image } },
-            { text: prompt },
-          ],
+          parts: [{ text: prompt }],
         },
       ];
 
       const result = await model.generateContentStream({ contents });
 
       let buffer = [];
-      let md = new MarkdownIt();
       for await (let response of result.stream) {
         buffer.push(response.text());
-        setOutput(md.render(buffer.join("")));
+        setOutput(buffer.join(""));
       }
     } catch (error) {
       setOutput(`Error: ${error.message}`);
     }
   };
 
-  const handleBack = () => {
-    setShowOutput(false); // Hide the output section and show the other components again
-  };
-
   return (
-    <div className="max-w-4xl mx-auto p-8 mt-10 bg-gray-100 rounded-2xl shadow-xl relative transition-all duration-700">
+    <div className="max-w-4xl mx-auto p-8 mt-10 bg-gray-100 rounded-2xl shadow-xl transition-all duration-700">
       {showOutput ? (
-       <div className="transition-all duration-700 absolute top-0 left-0 right-0 bottom-0 bg-white z-50 flex flex-col justify-center items-center p-5 rounded-lg">
-       <button
-         onClick={handleBack}
-         className="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 absolute top-4 right-4"
-       >
-         Back
-       </button>
-       <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
-         AI Generated Output
-       </h2>
-       <div
-         className="max-h-[50vh] overflow-y-auto p-3 rounded-lg bg-gray-50 text-justify w-[90%] shadow-md text-gray-700 text-sm"
-         dangerouslySetInnerHTML={{ __html: output }}
-       ></div>
-     </div>
+        <div className="w-full bg-white p-4 rounded-xl shadow-md mb-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-bold text-gray-800">AI Generated Output</h2>
+            <button
+              onClick={() => setShowOutput(false)}
+              className="bg-red-500 text-white px-3 py-2 mb-3 rounded-full text-sm hover:bg-red-600"
+            >
+              Close
+            </button>
+          </div>
+          <div className="max-h-[250px] overflow-y-auto bg-gray-50 p-3 rounded text-gray-700 text-sm text-justify">
+            {output}
+          </div>
+        </div>
       ) : (
         <>
           <h1 className="text-black text-3xl mb-6 font-bold text-center capitalize">
             Image Analysis
           </h1>
+
           <div className="flex flex-col md:flex-row items-start justify-center gap-6">
             <div
               className="flex flex-col items-center justify-center gap-4 border-2 border-dashed border-gray-400 rounded-xl p-6 w-full md:w-1/2 bg-white shadow-2xl hover:border-blue-500"
@@ -208,6 +173,7 @@ const GeminiImageText = () => {
             </div>
             <CameraComponent setImage={setCameraImage} setImagePreview={setImagePreview} />
           </div>
+
           <form onSubmit={handleSubmit} className="mt-6">
             <input
               type="text"
@@ -231,4 +197,4 @@ const GeminiImageText = () => {
   );
 };
 
-export default GeminiImageText
+export default GeminiImageText;
