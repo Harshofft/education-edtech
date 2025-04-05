@@ -10,7 +10,7 @@ import {
 import Webcam from "react-webcam";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const CameraComponent = ({ setImage, setImagePreview }) => {
+const CameraComponent = ({ setImage, setImagePreview, onImagePresent }) => {
   const webcamRef = useRef(null);
   const [cameraActive, setCameraActive] = useState(true);
 
@@ -20,6 +20,7 @@ const CameraComponent = ({ setImage, setImagePreview }) => {
       if (imageSrc) {
         setImage(imageSrc);
         setImagePreview(imageSrc);
+        onImagePresent(true);
       }
     }
   };
@@ -63,7 +64,8 @@ const GeminiImageText = () => {
   const [cameraImage, setCameraImage] = useState(null);
   const [showOutput, setShowOutput] = useState(false);
   const fileInputRef = useRef(null);
-  const API_KEY = "YOUR_API_KEY_HERE";
+  const [isImagePresent, setIsImagePresent] = useState(false);
+  const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -72,9 +74,18 @@ const GeminiImageText = () => {
       reader.onload = () => {
         setImagePreview(reader.result);
         setCameraImage(null);
+        setIsImagePresent(true);
       };
       reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+      setIsImagePresent(false);
+      setCameraImage(null);
     }
+  };
+
+  const handleImagePresent = (isPresent) => {
+    setIsImagePresent(isPresent);
   };
 
   const handleSubmit = async (event) => {
@@ -82,12 +93,13 @@ const GeminiImageText = () => {
     setOutput("Generating...");
     setShowOutput(true);
 
+    if (!imagePreview && !cameraImage) {
+      setOutput("Please select or capture an image.");
+      return;
+    }
+
     try {
       let imageDataUrl = cameraImage || imagePreview;
-      if (!imageDataUrl) {
-        setOutput("Please select or capture an image.");
-        return;
-      }
 
       const genAI = new GoogleGenerativeAI(API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -95,7 +107,15 @@ const GeminiImageText = () => {
       const contents = [
         {
           role: "user",
-          parts: [{ text: prompt }],
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                mimeType: imageDataUrl.startsWith("data:image/jpeg") ? "image/jpeg" : "image/png",
+                data: imageDataUrl.split(",")[1],
+              },
+            },
+          ],
         },
       ];
 
@@ -136,7 +156,7 @@ const GeminiImageText = () => {
 
           <div className="flex flex-col md:flex-row items-start justify-center gap-6">
             <div
-              className="flex flex-col items-center justify-center gap-4 border-2 border-dashed border-gray-400 rounded-xl p-6 w-full md:w-1/2 bg-white shadow-2xl hover:border-blue-500"
+              className="flex flex-col items-center justify-center gap-4 border-2 border-dashed border-gray-400 rounded-xl p-6 w-full md:w-1/2 bg-white shadow-2xl hover:border-blue-500 cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
             >
               <h3 className="text-lg font-semibold text-gray-800 mb-3">Upload Image</h3>
@@ -148,9 +168,11 @@ const GeminiImageText = () => {
                     className="rounded-xl w-full max-w-xs h-48 object-cover shadow-lg"
                   />
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setImagePreview(null);
                       setCameraImage(null);
+                      setIsImagePresent(false);
                     }}
                     className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
                   >
@@ -171,7 +193,11 @@ const GeminiImageText = () => {
                 onChange={handleImageChange}
               />
             </div>
-            <CameraComponent setImage={setCameraImage} setImagePreview={setImagePreview} />
+            <CameraComponent
+              setImage={setCameraImage}
+              setImagePreview={setImagePreview}
+              onImagePresent={handleImagePresent}
+            />
           </div>
 
           <form onSubmit={handleSubmit} className="mt-6">
@@ -185,7 +211,10 @@ const GeminiImageText = () => {
             />
             <button
               type="submit"
-              className="bg-blue-600 text-white p-3 rounded-xl flex items-center justify-center w-full mt-4 hover:bg-blue-700 transition-colors text-sm font-semibold"
+              className={`bg-blue-600 text-white p-3 rounded-xl flex items-center justify-center w-full mt-4 hover:bg-blue-700 transition-colors text-sm font-semibold ${
+                !isImagePresent ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              disabled={!isImagePresent}
             >
               <FaPaperPlane className="mr-2" />
               Generate Analysis
