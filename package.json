@@ -13,11 +13,7 @@
     "@google/generative-ai": "^0.24.0",
     "@monaco-editor/react": "^4.7.0",
     "@tailwindcss/vite": "^4.0.12",
-<<<<<<< HEAD
     "axios": "^1.10.0",
-=======
-    "axios": "^1.8.4",
->>>>>>> 49dda811623644ac9f028242a86f24c9e38dbb1a
     "dotenv": "^16.4.7",
     "lucide-react": "^0.479.0",
     "markdown-it": "^14.1.0",
