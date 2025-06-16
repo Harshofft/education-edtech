@@ -12,9 +12,9 @@ import {
 import Sidebar, { SidebarItem } from "./components/UIElments/Sidebar";
 import GeminiImageText from "./components/models/main";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Job from "./pages/sidebar/Jobs";
-import HomePage from "./pages/sidebar/HomePage";
-import CodeEditor from "./pages/sidebar/codeEditor/CodeEditor";
+import Job from "./components/sidebar/Jobs";
+import HomePage from "./components/sidebar/HomePage";
+import CodeEditor from "./components/codeEditor/CodeEditor";
 
 function App() {
   return (
